@@ -1628,7 +1628,7 @@
  * This is useful to help understand remote crash at your users site.
  * This feature requires ~400 bytes of SRAM and 5Kb of flash
  */
-#define HAS_POST_MORTEM_DEBUGGING 1
+//#define HAS_POST_MORTEM_DEBUGGING 1
 
 // @section lcd
 
