@@ -36,6 +36,7 @@
 
 #include "HAL/shared/Delay.h"
 #include "HAL/shared/esp_wifi.h"
+#include "HAL/shared/cpu_exception/exception_hook.h"
 
 #ifdef ARDUINO
   #include <pins_arduino.h>
@@ -1071,6 +1072,7 @@ void setup() {
   if (mcu & RST_SOFTWARE) SERIAL_ECHOLNPGM(STR_SOFTWARE_RESET);
   HAL_clear_reset_source();
 
+
   serialprintPGM(GET_TEXT(MSG_MARLIN));
   SERIAL_CHAR(' ');
   SERIAL_ECHOLNPGM(SHORT_BUILD_VERSION);
@@ -1332,9 +1334,17 @@ void setup() {
     ui.check_touch_calibration();
   #endif
 
+
+  #if HAS_POST_MORTEM_DEBUGGING
+    // If supported, install our exception handlers
+    hook_cpu_exceptions();
+  #endif
+
   marlin_state = MF_RUNNING;
 
   SETUP_LOG("setup() completed.");
+
+
 }
 
 /**

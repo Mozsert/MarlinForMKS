@@ -46,6 +46,7 @@ extern "C" {
 
 void SysTick_Callback() { disk_timerproc(); }
 
+TERN_(HAS_POST_MORTEM_DEBUGGING, extern void install_min_serial();)
 void HAL_init() {
 
   // Init LEDs
@@ -137,6 +138,11 @@ void HAL_init() {
   }
 
   HAL_timer_init();
+  
+  #if HAS_POST_MORTEM_DEBUGGING
+    // Install the min serial handler
+    install_min_serial();
+  #endif
 }
 
 // HAL idle task
