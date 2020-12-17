@@ -1621,6 +1621,15 @@
   //#define WATCHDOG_RESET_MANUAL
 #endif
 
+/**
+ * The post mortem debugging feature capture any misbehavior of the software
+ * and output the related CPU status and backtrace on the serial port.
+ * It also breaks under debugger if one is attached when this happens.
+ * This is useful to help understand remote crash at your users site.
+ * This feature requires ~400 bytes of SRAM and 5Kb of flash
+ */
+#define HAS_POST_MORTEM_DEBUGGING 1
+
 // @section lcd
 
 /**
