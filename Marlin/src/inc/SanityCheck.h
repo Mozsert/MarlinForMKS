@@ -772,15 +772,6 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
 #endif
 
 /**
- * Post mortem debugging
- */
-#if ENABLED(HAS_POST_MORTEM_DEBUGGING)
-  #if !defined(__arm__) && !defined(__thumb__)
-    #error "Currently this feature is only support on ARMv7 based board"
-  #endif
-#endif
-
-/**
  * Babystepping
  */
 #if ENABLED(BABYSTEPPING)

@@ -1621,15 +1621,6 @@
   //#define WATCHDOG_RESET_MANUAL
 #endif
 
-/**
- * The post mortem debugging feature capture any misbehavior of the software
- * and output the related CPU status and backtrace on the serial port.
- * It also breaks under debugger if one is attached when this happens.
- * This is useful to help understand remote crash at your users site.
- * This feature requires ~400 bytes of SRAM and 5Kb of flash
- */
-//#define HAS_POST_MORTEM_DEBUGGING 1
-
 // @section lcd
 
 /**
@@ -3688,3 +3679,10 @@
 
 // Enable Marlin dev mode which adds some special commands
 //#define MARLIN_DEV_MODE
+
+/**
+ * Postmortem Debugging captures misbehavior and outputs the CPU status and backtrace to serial.
+ * When running in the debugger it will break for debugging. This is useful to help understand
+ * a crash from a remote location. Requires ~400 bytes of SRAM and 5Kb of flash.
+ */
+//#define POST_MORTEM_DEBUGGING

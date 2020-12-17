@@ -1334,17 +1334,11 @@ void setup() {
     ui.check_touch_calibration();
   #endif
 
-
-  #if HAS_POST_MORTEM_DEBUGGING
-    // If supported, install our exception handlers
-    hook_cpu_exceptions();
-  #endif
+  TERN_(POST_MORTEM_DEBUGGING, hook_cpu_exceptions()); // If supported, install Marlin exception handlers
 
   marlin_state = MF_RUNNING;
 
   SETUP_LOG("setup() completed.");
-
-
 }
 
 /**
