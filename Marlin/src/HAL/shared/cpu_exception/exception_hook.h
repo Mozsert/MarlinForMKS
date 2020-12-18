@@ -29,7 +29,7 @@
      2.1 The CPU triggers its exception and jump into the vector table for the exception type
      2.2 Instead of finding the default handler, it finds the updated pointer to our hook
      2.3 The CPU jumps into our hook function (likely a naked function to keep all information about crash point intact)
-     2.4 The hook (naked) function saves the important registers (stack pointer, program counter, current mode) and jump to a common exception handler (in C)
+     2.4 The hook (naked) function saves the important registers (stack pointer, program counter, current mode) and jumps to a common exception handler (in C)
      2.5 The common exception handler dumps the registers on the serial link and perform a backtrace around the crashing point
      2.6 Once the backtrace is performed the last resort function is called (platform specific).
          On some platform with a LCD screen, this might display the crash information as a QR code or as text for the
@@ -41,13 +41,13 @@
 // with a more performant exception handler
 void hook_cpu_exceptions();
 
-// Some platform might deal without an hard fault handler, in that case, return 0 in your platform here or skip implementing it
+// Some platform might deal without a hard fault handler, in that case, return 0 in your platform here or skip implementing it
 void * __attribute__((weak)) hook_get_hardfault_vector_address(unsigned base_address);
-// Some platform might deal without an memory management fault handler, in that case, return 0 in your platform here or skip implementing it
+// Some platform might deal without a memory management fault handler, in that case, return 0 in your platform here or skip implementing it
 void * __attribute__((weak)) hook_get_memfault_vector_address(unsigned base_address);
-// Some platform might deal without an bus fault handler, in that case, return 0 in your platform here or skip implementing it
+// Some platform might deal without a bus fault handler, in that case, return 0 in your platform here or skip implementing it
 void * __attribute__((weak)) hook_get_busfault_vector_address(unsigned base_address);
-// Some platform might deal without an usage fault handler, in that case, return 0 in your platform here or skip implementing it
+// Some platform might deal without a usage fault handler, in that case, return 0 in your platform here or skip implementing it
 void * __attribute__((weak)) hook_get_usagefault_vector_address(unsigned base_address);
 
 // Last resort function that can be called after the exception handler was called.
