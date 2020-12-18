@@ -34,10 +34,12 @@ static bool UnwReportOut(void* ctx, const UnwReport* bte) {
 
   (*p)++;
 
-  MinSerial::TX('#');    MinSerial::TXDec(*p);           MinSerial::TX(" : ");
-  MinSerial::TX(bte->name?bte->name:"unknown");          MinSerial::TX('@');     MinSerial::TXHex(bte->function);
-  MinSerial::TX('+');    MinSerial::TXDec(bte->address - bte->function);
-  MinSerial::TX(" PC:"); MinSerial::TXHex(bte->address); MinSerial::TX('\n');
+  const uint32_t a = bte->address, f = bte->function;
+  MinSerial::TX('#');    MinSerial::TXDec(*p);    MinSerial::TX(" : ");
+  MinSerial::TX(bte->name?:"unknown");            MinSerial::TX('@');   MinSerial::TXHex(f);
+  MinSerial::TX('+');    MinSerial::TXDec(a - f);
+  MinSerial::TX(" PC:"); MinSerial::TXHex(a);
+  MinSerial::TX('\n');
   return true;
 }
 
