@@ -2,6 +2,8 @@
  * Marlin 3D Printer Firmware
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +31,9 @@
      2.3 The CPU jumps into our hook function (likely a naked function to keep all information about crash point intact)
      2.4 The hook (naked) function saves the important registers (stack pointer, program counter, current mode) and jump to a common exception handler (in C)
      2.5 The common exception handler dumps the registers on the serial link and perform a backtrace around the crashing point
-     2.6 Once the backtrace is performed the last resort function is called (platform specific). 
-         On some platform with a LCD screen, this might display the crash information as a QR code or as text for the 
-         user to capture by taking a picture 
+     2.6 Once the backtrace is performed the last resort function is called (platform specific).
+         On some platform with a LCD screen, this might display the crash information as a QR code or as text for the
+         user to capture by taking a picture
      2.7 The CPU is reset and/or halted by triggering a debug breakpoint if a debugger is attached */
 
 // Hook into CPU exception interrupt table to call the backtracing code upon an exception
@@ -49,4 +51,4 @@ void * __attribute__((weak)) hook_get_busfault_vector_address(unsigned base_addr
 void * __attribute__((weak)) hook_get_usagefault_vector_address(unsigned base_address);
 
 // Last resort function that can be called after the exception handler was called.
-void __attribute__((weak)) hook_last_resort_func(); 
+void __attribute__((weak)) hook_last_resort_func();

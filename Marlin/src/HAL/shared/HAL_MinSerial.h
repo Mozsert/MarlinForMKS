@@ -2,6 +2,8 @@
  * Marlin 3D Printer Firmware
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,44 +31,42 @@
 extern void (*HAL_min_serial_init)();
 extern void (*HAL_min_serial_out)(char ch);
 
-struct MinSerial
-{
-    // Serial output
-    static void TX(char ch) { HAL_min_serial_out(ch); }
-    // Send String through UART
-    static void TX(const char* s) { while (*s) TX(*s++); }
-    // Send a digit through UART
-    static void TXDigit(uint32_t d) {
-        if (d < 10) TX((char)(d+'0'));
-        else if (d < 16) TX((char)(d+'A'-10));
-        else TX('?');
+struct MinSerial {
+  // Serial output
+  static void TX(char ch) { HAL_min_serial_out(ch); }
+  // Send String through UART
+  static void TX(const char* s) { while (*s) TX(*s++); }
+  // Send a digit through UART
+  static void TXDigit(uint32_t d) {
+    if (d < 10) TX((char)(d+'0'));
+    else if (d < 16) TX((char)(d+'A'-10));
+    else TX('?');
+  }
+
+  // Send Hex number through UART
+  static void TXHex(uint32_t v) {
+    TX("0x");
+    for (uint8_t i = 0; i < 8; i++, v <<= 4)
+      TXDigit((v >> 28) & 0xF);
+  }
+
+  // Send Decimal number through UART
+  static void TXDec(uint32_t v) {
+    if (!v) {
+      TX('0');
+      return;
     }
 
-    // Send Hex number through UART
-    static void TXHex(uint32_t v) {
-        TX("0x");
-        for (uint8_t i = 0; i < 8; i++, v <<= 4)
-            TXDigit((v >> 28) & 0xF);
+    char nbrs[14];
+    char *p = &nbrs[0];
+    while (v != 0) {
+      *p++ = '0' + (v % 10);
+      v /= 10;
     }
-
-    // Send Decimal number through UART
-    static void TXDec(uint32_t v) {
-        if (!v) {
-            TX('0');
-            return;
-        }
-
-        char nbrs[14];
-        char *p = &nbrs[0];
-        while (v != 0) {
-            *p++ = '0' + (v % 10);
-            v /= 10;
-        }
-        do {
-            p--;
-            TX(*p);
-        } while (p != &nbrs[0]);
-    }
-    static void init() { HAL_min_serial_init(); }
+    do {
+      p--;
+      TX(*p);
+    } while (p != &nbrs[0]);
+  }
+  static void init() { HAL_min_serial_init(); }
 };
-

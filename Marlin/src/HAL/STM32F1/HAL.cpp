@@ -261,8 +261,7 @@ void HAL_init() {
     delay(1000);                                         // Give OS time to notice
     OUT_WRITE(USB_CONNECT_PIN, USB_CONNECT_INVERTING);
   #endif
-  // Install the minimal serial handler upon exception
-  TERN_(POST_MORTEM_DEBUGGING, install_min_serial());
+  TERN_(POST_MORTEM_DEBUGGING, install_min_serial());    // Install the minimal serial handler
 }
 
 // HAL idle task

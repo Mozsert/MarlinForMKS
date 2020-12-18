@@ -8,35 +8,15 @@
 #include "../backtrace/backtrace.h"
 #include "../HAL_MinSerial.h"
 
-
-
-
 #define HW_REG(X)  (*((volatile unsigned long *)(X)))
 
-// Default function use the CPU VTOR register to get the vector table. 
+// Default function use the CPU VTOR register to get the vector table.
 // Accessing the CPU VTOR register is done in assembly since it's the only way that's common to all current tool
-unsigned long get_vtor() 
-{
-    // Even if it looks like an error, it is not an error
-    return HW_REG(0xE000ED08);
-}
-void * hook_get_hardfault_vector_address(unsigned vtor) 
-{ 
-    return (void*)(vtor + 0x03); 
-}
-void * hook_get_memfault_vector_address(unsigned vtor) 
-{ 
-    return (void*)(vtor + 0x04); 
-}
-void * hook_get_busfault_vector_address(unsigned vtor) 
-{ 
-    return (void*)(vtor + 0x05); 
-}
-void * hook_get_usagefault_vector_address(unsigned vtor) 
-{ 
-    return (void*)(vtor + 0x06); 
-}
-
+unsigned long get_vtor() { return HW_REG(0xE000ED08); } // Even if it looks like an error, it is not an error
+void * hook_get_hardfault_vector_address(unsigned vtor)  { return (void*)(vtor + 0x03); }
+void * hook_get_memfault_vector_address(unsigned vtor)   { return (void*)(vtor + 0x04); }
+void * hook_get_busfault_vector_address(unsigned vtor)   { return (void*)(vtor + 0x05); }
+void * hook_get_usagefault_vector_address(unsigned vtor) { return (void*)(vtor + 0x06); }
 
 // From https://interrupt.memfault.com/blog/cortex-m-fault-debug with addition of saving the exception's LR and the fault type
 // Please notice that the fault itself is accessible in the CFSR register at address 0xE000ED28
@@ -66,7 +46,6 @@ WRITE_HANDLER(4);
     }                                                    \
 } while (0)
 
-
 extern "C"
 void CommonHandler_C(unsigned long *sp, unsigned long lr, unsigned long cause) {
 
@@ -79,7 +58,7 @@ void CommonHandler_C(unsigned long *sp, unsigned long lr, unsigned long cause) {
 
   // Reinit the serial link (might only work if implemented in each of your boards)
   MinSerial::init();
-  
+
   MinSerial::TX("\n\n## Software Fault detected ##\n");
   MinSerial::TX("Cause: "); MinSerial::TX(causestr[cause]); MinSerial::TX('\n');
 
@@ -127,81 +106,78 @@ void CommonHandler_C(unsigned long *sp, unsigned long lr, unsigned long cause) {
 
   // Restart watchdog
   // TODO
-  
+
   // No watchdog, let's perform ARMv7 reset instead by writing to AIRCR register with VECTKEY set to SYSRESETREQ
   HW_REG(0xE000ED0C) = (HW_REG(0xE000ED0C) & 0x0000FFFF) | 0x05FA0004;
 
   while(1) {} // Bad luck, nothing worked
 }
 
-void hook_cpu_exceptions()
-{
-    // On ARM 32bits CPU, the vector table is like this:
-    // 0x0C => Hardfault
-    // 0x10 => MemFault
-    // 0x14 => BusFault
-    // 0x18 => UsageFault
-    
-    // Unfortunately, it's usually run from flash, and we can't write to flash here directly to hook our instruction
-    // We could set an hardware breakpoint, and hook on the fly when it's being called, but this
-    // is hard to get right and would probably break debugger when attached
+void hook_cpu_exceptions() {
+  // On ARM 32bits CPU, the vector table is like this:
+  // 0x0C => Hardfault
+  // 0x10 => MemFault
+  // 0x14 => BusFault
+  // 0x18 => UsageFault
 
-    // So instead, we'll allocate a new vector table filled with the previous value except
-    // for the fault we are interested in.
-    // Now, comes the issue to figure out what is the current vector table size
-    // There is nothing telling us what is the vector table as it's per-cpu vendor specific.
-    // BUT: we are being called at the end of the setup, so we assume the setup is done
-    // Thus, we can read the current vector table until we find an address that's not in flash, and it would mark the
-    // end of the vector table (skipping the fist entry obviously)
-    // The position of the program in flash is expected to be at 0x08xxx xxxx on all known platform for ARM and the 
-    // flash size is available via register 0x1FFFF7E0 on STM32 family, but it's not the case for all ARM boards 
-    // (accessing this register might trigger a fault if it's not implemented).
+  // Unfortunately, it's usually run from flash, and we can't write to flash here directly to hook our instruction
+  // We could set an hardware breakpoint, and hook on the fly when it's being called, but this
+  // is hard to get right and would probably break debugger when attached
 
-    // So we'll simply mask the top 8 bits of the first handler as an hint of being in the flash or not -that's poor and will
-    // probably break if the flash happens to be more than 128MB, but in this case, we are not magician, we need help from outside.
+  // So instead, we'll allocate a new vector table filled with the previous value except
+  // for the fault we are interested in.
+  // Now, comes the issue to figure out what is the current vector table size
+  // There is nothing telling us what is the vector table as it's per-cpu vendor specific.
+  // BUT: we are being called at the end of the setup, so we assume the setup is done
+  // Thus, we can read the current vector table until we find an address that's not in flash, and it would mark the
+  // end of the vector table (skipping the fist entry obviously)
+  // The position of the program in flash is expected to be at 0x08xxx xxxx on all known platform for ARM and the
+  // flash size is available via register 0x1FFFF7E0 on STM32 family, but it's not the case for all ARM boards
+  // (accessing this register might trigger a fault if it's not implemented).
 
-    unsigned long * vecAddr = (unsigned long*)get_vtor();
+  // So we'll simply mask the top 8 bits of the first handler as an hint of being in the flash or not -that's poor and will
+  // probably break if the flash happens to be more than 128MB, but in this case, we are not magician, we need help from outside.
 
-    #ifdef VECTOR_TABLE_SIZE
-      uint32_t vec_size = VECTOR_TABLE_SIZE;
-      alignas(128) static unsigned long vectable[VECTOR_TABLE_SIZE] ;
-    #else
-      #ifndef IS_IN_FLASH
-        #define IS_IN_FLASH(X) (((unsigned long)X & 0xFF000000) == 0x08000000)
-      #endif
+  unsigned long * vecAddr = (unsigned long*)get_vtor();
 
-      // When searching for the end of the vector table, this acts as a limit not to overcome
-      #ifndef VECTOR_TABLE_SENTINEL 
-        #define VECTOR_TABLE_SENTINEL 80
-      #endif
-
-
-      // Find the vector table size
-      uint32_t vec_size = 1;
-      while (IS_IN_FLASH(vecAddr[vec_size]) && vec_size < VECTOR_TABLE_SENTINEL) 
-        vec_size++;
-
-      // We failed to find a valid vector table size, let's abort hooking up
-      if (vec_size == VECTOR_TABLE_SENTINEL) return;
-      // Poor method that's wasting RAM here, but allocating with malloc and alignment would be worst
-      // 128 bytes alignement is required for writing the VTOR register
-      alignas(128) static unsigned long vectable[VECTOR_TABLE_SENTINEL];
+  #ifdef VECTOR_TABLE_SIZE
+    uint32_t vec_size = VECTOR_TABLE_SIZE;
+    alignas(128) static unsigned long vectable[VECTOR_TABLE_SIZE] ;
+  #else
+    #ifndef IS_IN_FLASH
+      #define IS_IN_FLASH(X) (((unsigned long)X & 0xFF000000) == 0x08000000)
     #endif
-    // Copy the current vector table into the new table
-    for (uint32_t i = 0; i < vec_size; i++)
-      vectable[i] = vecAddr[i];
 
-    // Let's hook now with our functions
-    vectable[(unsigned long)hook_get_hardfault_vector_address(0)]  = (unsigned long)&FaultHandler_1;
-    vectable[(unsigned long)hook_get_memfault_vector_address(0)]   = (unsigned long)&FaultHandler_2;
-    vectable[(unsigned long)hook_get_busfault_vector_address(0)]   = (unsigned long)&FaultHandler_3;
-    vectable[(unsigned long)hook_get_usagefault_vector_address(0)] = (unsigned long)&FaultHandler_4;
+    // When searching for the end of the vector table, this acts as a limit not to overcome
+    #ifndef VECTOR_TABLE_SENTINEL
+      #define VECTOR_TABLE_SENTINEL 80
+    #endif
 
-    // Finally swap with our own vector table
-    HW_REG(0xE000ED08) = (unsigned long)vectable | (1<<29UL); // 29th bit is for telling the CPU the table is now in SRAM (should be present already)
+
+    // Find the vector table size
+    uint32_t vec_size = 1;
+    while (IS_IN_FLASH(vecAddr[vec_size]) && vec_size < VECTOR_TABLE_SENTINEL)
+      vec_size++;
+
+    // We failed to find a valid vector table size, let's abort hooking up
+    if (vec_size == VECTOR_TABLE_SENTINEL) return;
+    // Poor method that's wasting RAM here, but allocating with malloc and alignment would be worst
+    // 128 bytes alignement is required for writing the VTOR register
+    alignas(128) static unsigned long vectable[VECTOR_TABLE_SENTINEL];
+  #endif
+
+  // Copy the current vector table into the new table
+  for (uint32_t i = 0; i < vec_size; i++)
+    vectable[i] = vecAddr[i];
+
+  // Let's hook now with our functions
+  vectable[(unsigned long)hook_get_hardfault_vector_address(0)]  = (unsigned long)&FaultHandler_1;
+  vectable[(unsigned long)hook_get_memfault_vector_address(0)]   = (unsigned long)&FaultHandler_2;
+  vectable[(unsigned long)hook_get_busfault_vector_address(0)]   = (unsigned long)&FaultHandler_3;
+  vectable[(unsigned long)hook_get_usagefault_vector_address(0)] = (unsigned long)&FaultHandler_4;
+
+  // Finally swap with our own vector table
+  HW_REG(0xE000ED08) = (unsigned long)vectable | (1<<29UL); // 29th bit is for telling the CPU the table is now in SRAM (should be present already)
 }
-
-
-
 
 #endif // __arm__ || __thumb__

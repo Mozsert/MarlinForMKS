@@ -81,8 +81,8 @@ void backtrace() {
 
   backtrace_ex(sp, lr, pc);
 }
-void backtrace_ex(unsigned long sp, unsigned long lr, unsigned long pc)
-{
+
+void backtrace_ex(unsigned long sp, unsigned long lr, unsigned long pc) {
   UnwindFrame btf;
 
   // Fill the traceback structure
@@ -101,4 +101,4 @@ void backtrace_ex(unsigned long sp, unsigned long lr, unsigned long pc)
 
 void backtrace() {}
 
-#endif
+#endif // __arm__ || __thumb__
