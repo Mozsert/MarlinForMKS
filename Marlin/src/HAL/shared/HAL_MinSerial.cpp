@@ -19,15 +19,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#include "../../inc/MarlinConfig.h"
+#include "HAL_MinSerial.h"
 
 #if ENABLED(POST_MORTEM_DEBUGGING)
-
-#include "HAL_MinSerial.h"
 
 void HAL_min_serial_init_default() {}
 void HAL_min_serial_out_default(char ch) { SERIAL_CHAR(ch); }
 void (*HAL_min_serial_init)() = &HAL_min_serial_init_default;
 void (*HAL_min_serial_out)(char) = &HAL_min_serial_out_default;
+
+bool MinSerial::force_using_default_output = false;
 
 #endif

@@ -22,6 +22,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "../../inc/MarlinConfig.h"
 
 // Serial stuff here
 // Inside an exception handler, the CPU state is not safe, we can't expect the handler to resume
@@ -32,8 +33,14 @@ extern void (*HAL_min_serial_init)();
 extern void (*HAL_min_serial_out)(char ch);
 
 struct MinSerial {
+  static bool force_using_default_output;
   // Serial output
-  static void TX(char ch) { HAL_min_serial_out(ch); }
+  static void TX(char ch) { 
+    if (force_using_default_output) 
+      SERIAL_CHAR(ch); 
+    else 
+      HAL_min_serial_out(ch); 
+  }
   // Send String through UART
   static void TX(const char* s) { while (*s) TX(*s++); }
   // Send a digit through UART
@@ -68,5 +75,5 @@ struct MinSerial {
       TX(*p);
     } while (p != &nbrs[0]);
   }
-  static void init() { HAL_min_serial_init(); }
+  static void init() { if (!force_using_default_output) HAL_min_serial_init(); }
 };
