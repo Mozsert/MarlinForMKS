@@ -21,8 +21,8 @@
  */
 #pragma once
 
+#include "../../core/serial.h"
 #include <stdint.h>
-#include "../../inc/MarlinConfig.h"
 
 // Serial stuff here
 // Inside an exception handler, the CPU state is not safe, we can't expect the handler to resume
