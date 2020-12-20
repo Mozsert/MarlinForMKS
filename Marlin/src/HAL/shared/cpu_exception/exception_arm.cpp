@@ -42,8 +42,7 @@ void * hook_get_usagefault_vector_address(unsigned vtor) { return (void*)(vtor +
 
 // Common exception frame for ARM, should work for all ARM CPU
 // Described here (modified for convenience): https://interrupt.memfault.com/blog/cortex-m-fault-debug
-struct __attribute__((packed)) ContextStateFrame 
-{
+struct __attribute__((packed)) ContextStateFrame {
   uint32_t r0;
   uint32_t r1;
   uint32_t r2;
@@ -54,8 +53,7 @@ struct __attribute__((packed)) ContextStateFrame
   uint32_t xpsr;
 };
 
-struct __attribute__((packed)) ContextSavedFrame 
-{
+struct __attribute__((packed)) ContextSavedFrame {
   uint32_t R0;
   uint32_t R1;
   uint32_t R2;
@@ -110,12 +108,8 @@ WRITE_HANDLER(4);
 // basic loop with watchdog calling or manual resetting
 static ContextSavedFrame savedFrame;
 static uint8_t           lastCause;
-bool resume_from_fault()
-{
-
-  static const char* causestr[] = {
-    "Unknown","Hard","Mem","Bus","Usage",
-  };
+bool resume_from_fault() {
+  static const char* causestr[] = { "Unknown", "Hard", "Mem", "Bus", "Usage" };
   // Reinit the serial link (might only work if implemented in each of your boards)
   MinSerial::init();
 
@@ -183,7 +177,6 @@ bool resume_from_fault()
   while(1) {} // Bad luck, nothing worked
 }
 
-
 // Make sure the compiler does not optimize the frame argument away
 extern "C"
 __attribute__((optimize("O0")))
@@ -215,8 +208,7 @@ void CommonHandler_C(ContextStateFrame * frame, unsigned long lr, unsigned long 
   // the bottom 8 bits of the xpsr hold the exception number of the
   // executing exception or 0 if the processor is in Thread mode
   const bool faulted_from_exception = ((frame->xpsr & 0xFF) != 0);
-  if (!faulted_from_exception) // Not sure about the non_usage_fault, we want to try anyway, don't we ? && !non_usage_fault_occurred)
-  {
+  if (!faulted_from_exception) { // Not sure about the non_usage_fault, we want to try anyway, don't we ? && !non_usage_fault_occurred)
     // Try to resume to our handler here
     CFSR |= CFSR; // The ARM programmer manual says you must write to 1 all fault bits to clear them so this instruction is correct
     // The frame will not be valid when returning anymore, let's clean it    
