@@ -161,18 +161,15 @@ bool resume_from_fault()
   // Call the last resort function here
   hook_last_resort_func();
 
-
-  uint32_t start = millis(), last = start;
+  const uint32_t start = millis(), end = start + 100; // 100ms should be enough
   // We need to wait for the serial buffers to be output but we don't know for how long
   // So we'll just need to refresh the watchdog for a while and then stop for the system to reboot
-  while ((last - start) < 100)
-  { // 100ms should be enough
-    watchdog_refresh(); // This does nothing if the watchdog is not selected in Configuration.h
-    uint32_t c = millis();
-    // Every millisecond send a char to the output so any pending buffer are flushed
-    if (c != last) 
-      MinSerial::TX('.');
-    last = c;
+  uint32_t last = start;
+  while (PENDING(ms, end)) {
+    watchdog_refresh();
+    while (millis() == last) { /* nada */ }
+    last = millis();
+    MinSerial::TX('.');
   }
 
   // Reset now by reinstantiating the bootloader's vector table
