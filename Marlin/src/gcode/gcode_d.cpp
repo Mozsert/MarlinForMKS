@@ -174,7 +174,27 @@
         for (int i = 10000; i--;) DELAY_US(1000UL);
         ENABLE_ISRS();
         SERIAL_ECHOLNPGM("FAILURE: Watchdog did not trigger board reset.");
+      } break;
+
+      #if ENABLED(POST_MORTEM_DEBUGGING)
+      case 451: // Trigger all kind of faults to test exception catcher
+      case 452:
+      case 453:
+      case 454: { // Trigger all kind of faults to test exception catcher
+        SERIAL_ECHOLNPGM("Disabling heaters");
+        thermalManager.disable_all_heaters();
+        delay(1000); // Allow time to print
+
+        switch (dcode) {
+          case 451: *(int*)0 = 451; break; // Write at bad address
+          case 452: { volatile int a = 0; volatile int b = 452/a; } break; // Divide by zero
+          case 453: { char buf[5]; *(uint32_t*)&buf[1] = 453; } break; // Unaligned access (some CPU accepts this)
+          case 454: { void (*func)() = (void (*)()) 0xE0000000; func(); } break; // Invalid instruction
+          default: break;
+        }
+        break;
       }
+      #endif
     }
   }
 
